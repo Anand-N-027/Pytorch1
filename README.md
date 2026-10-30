@@ -1,50 +1,113 @@
-MNIST Digit Classification using PyTorch
-This project implements a Convolutional Neural Network (CNN) using PyTorch to classify handwritten digits from the MNIST dataset. The notebook covers dataset loading, image visualization, CNN architecture design, and model preparation for training and evaluation.
+# MNIST Digit Classification using PyTorch and TorchVision
 
-Project Overview
-The goal of this project is to build a deep learning model capable of recognizing handwritten digits (0–9) from grayscale images in the MNIST dataset.
+## Overview
 
-The project demonstrates:
+This project implements a Convolutional Neural Network (CNN) using PyTorch for handwritten digit classification on the MNIST dataset. The workflow includes dataset downloading, preprocessing, visualization, model development, training, and evaluation.
 
-Loading and preprocessing image datasets
-Creating data pipelines with PyTorch DataLoaders
-Visualizing training samples
-Building a custom CNN from scratch
-Preparing a model for image classification tasks
-Technologies Used
-Python
-PyTorch
-TorchVision
-NumPy
-Pandas
-Matplotlib
-TorchMetrics
-tqdm
-Jupyter Notebook
-Dataset
-The project uses the MNIST dataset, which contains:
+The project demonstrates fundamental deep learning and computer vision concepts, including:
 
-60,000 training images
-10,000 testing images
-10 classes representing digits 0–9
-Grayscale images of size 28 × 28 pixels
-The dataset is automatically downloaded using TorchVision.
+- Image classification using PyTorch
+- Working with the MNIST dataset
+- Data loading with DataLoader
+- Convolutional Neural Networks (CNNs)
+- Training neural networks for multi-class classification
+- Visualization of image datasets
+- Performance evaluation using classification metrics
 
+---
+
+## Directory Structure
+
+```text
+.
+├── notebook.ipynb
+├── README.md
+└── dataset/
+    └── MNIST/
+        ├── raw/
+        └── processed/
+```
+
+---
+
+## Dataset Description
+
+### MNIST Dataset
+
+The project uses the MNIST handwritten digit dataset provided through TorchVision.
+
+The dataset contains grayscale images of handwritten digits ranging from 0 to 9.
+
+### Dataset Characteristics
+
+- Image Size: 28 × 28 pixels
+- Channels: 1 (Grayscale)
+- Classes: 10
+- Training Images: 60,000
+- Test Images: 10,000
+
+### Classes
+
+```text
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+```
+
+---
+
+## Requirements
+
+The project was developed using:
+
+- Python 3.11
+- PyTorch 2.2.2
+- TorchVision 0.17.2
+- NumPy 1.26.4
+- Pandas 2.3.3
+- Matplotlib 3.10.8
+- TorchMetrics 1.8.2
+- tqdm 4.67.1
+
+Install dependencies:
+
+```bash
+pip install pandas matplotlib torch torchvision torchmetrics tqdm
+```
+
+---
+
+## Data Loading
+
+The MNIST dataset is automatically downloaded using TorchVision.
+
+### Training Dataset
+
+```python
 train_dataset = datasets.MNIST(
     root="dataset/",
-    train=True,
     download=True,
+    train=True,
     transform=transforms.ToTensor()
 )
-Project Structure
-mnist-cnn-classifier/
-│
-├── MNIST_CNN.ipynb
-├── dataset/
-└── README.md
-Data Loading
-The dataset is loaded using PyTorch's DataLoader.
+```
 
+### Test Dataset
+
+```python
+test_dataset = datasets.MNIST(
+    root="dataset/",
+    download=True,
+    train=False,
+    transform=transforms.ToTensor()
+)
+```
+
+---
+
+## DataLoader Configuration
+
+PyTorch DataLoaders are used to batch and shuffle the images.
+
+```python
 batch_size = 60
 
 train_loader = DataLoader(
@@ -58,102 +121,285 @@ test_loader = DataLoader(
     batch_size=batch_size,
     shuffle=True
 )
-This allows efficient batching and shuffling during training.
+```
 
-Data Visualization
-The notebook includes functionality to visualize handwritten digit samples from the dataset.
+### Configuration
+
+- Batch Size: 60
+- Shuffle: Enabled
+- Dataset: MNIST
+
+---
+
+## Data Visualization
+
+The notebook includes functions for displaying image batches from the dataset.
+
+```python
+def imshow(img):
+    npimg = img.numpy()
+    plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    plt.show()
+```
+
+Example workflow:
+
+```python
+dataiter = iter(train_loader)
+images, labels = next(dataiter)
 
 imshow(torchvision.utils.make_grid(images))
-This helps verify that the dataset has been loaded correctly before training.
+```
 
-CNN Architecture
-The model consists of two convolutional layers followed by a fully connected classification layer.
+This allows visualization of multiple handwritten digit samples during preprocessing and debugging.
 
-Layer Structure
-Input (1 × 28 × 28)
+---
 
-Conv2D (1 → 8)
-ReLU
-MaxPool
+## CNN Architecture
 
-Conv2D (8 → 16)
-ReLU
-MaxPool
+The model consists of two convolutional layers followed by max-pooling operations and a fully connected classifier.
 
+### Feature Extraction Layers
+
+```text
+Input Image (1 × 28 × 28)
+        │
+        ├── Conv2D (1 → 8)
+        ├── ReLU
+        ├── MaxPool
+        │
+        ├── Conv2D (8 → 16)
+        ├── ReLU
+        └── MaxPool
+```
+
+### Classification Layers
+
+```text
 Flatten
+   ↓
+Linear (16 × 7 × 7 → 10)
+```
 
-Fully Connected Layer
+### Output Classes
 
-Output (10 Classes)
-Model Definition
-class CNN(nn.Module):
-    def __init__(self, in_channels, num_classes):
-        super(CNN, self).__init__()
+```text
+Digit 0
+Digit 1
+Digit 2
+Digit 3
+Digit 4
+Digit 5
+Digit 6
+Digit 7
+Digit 8
+Digit 9
+```
 
-        self.conv1 = nn.Conv2d(
-            in_channels=in_channels,
-            out_channels=8,
-            kernel_size=3,
-            padding=1
-        )
+---
 
-        self.pool = nn.MaxPool2d(
-            kernel_size=2,
-            stride=2
-        )
+## Model Definition
 
-        self.conv2 = nn.Conv2d(
-            in_channels=8,
-            out_channels=16,
-            kernel_size=3,
-            padding=1
-        )
+The neural network is implemented using the PyTorch `nn.Module` class.
 
-        self.fc1 = nn.Linear(
-            16 * 7 * 7,
-            num_classes
-        )
-Training Configuration
-Batch Size = 60
-Input Channels = 1
-Output Classes = 10
-Image Size = 28 × 28
-Learning Outcomes
-This project helped me understand:
+### Components
 
-Deep Learning Fundamentals
-Convolutional Neural Networks (CNNs)
-Image Classification
-PyTorch Dataset and DataLoader APIs
-Feature Extraction using Convolution Layers
-Pooling Operations
-Forward Propagation in Neural Networks
-Computer Vision Workflows
-Future Improvements
-Complete model training pipeline
-Add validation dataset support
-Track training and validation accuracy
-Implement confusion matrix visualization
-Add precision, recall, and F1-score metrics
-Save and load trained models
-Compare CNN performance with fully connected networks
-Experiment with deeper architectures
-Installation
-Clone the repository:
+#### Convolution Layer 1
 
-git clone https://github.com/Anand-N-027/<repository-name>.git
-cd <repository-name>
-Install required packages:
+```python
+nn.Conv2d(
+    in_channels=1,
+    out_channels=8,
+    kernel_size=3,
+    padding=1
+)
+```
 
-pip install pandas matplotlib torch torchvision torchmetrics tqdm
-Running the Project
-Launch Jupyter Notebook:
+#### Convolution Layer 2
 
-jupyter notebook
-Open the notebook and run all cells sequentially.
+```python
+nn.Conv2d(
+    in_channels=8,
+    out_channels=16,
+    kernel_size=3,
+    padding=1
+)
+```
 
-Author
-Anand Narendran
+#### Pooling Layer
 
-GitHub: https://github.com/Anand-N-027
+```python
+nn.MaxPool2d(
+    kernel_size=2,
+    stride=2
+)
+```
 
+#### Fully Connected Layer
+
+```python
+nn.Linear(
+    16 * 7 * 7,
+    10
+)
+```
+
+---
+
+## Forward Pass
+
+The forward pass follows the sequence:
+
+```text
+Input
+   ↓
+Conv1
+   ↓
+ReLU
+   ↓
+MaxPool
+   ↓
+Conv2
+   ↓
+ReLU
+   ↓
+MaxPool
+   ↓
+Flatten
+   ↓
+Linear Layer
+   ↓
+Output Predictions
+```
+
+Implementation:
+
+```python
+x = F.relu(self.conv1(x))
+x = self.pool(x)
+
+x = F.relu(self.conv2(x))
+x = self.pool(x)
+
+x = x.reshape(x.shape[0], -1)
+
+x = self.fc1(x)
+```
+
+---
+
+## Model Objective
+
+The CNN learns to classify handwritten digits into one of ten categories:
+
+| Class | Digit |
+|---------|---------|
+| 0 | 0 |
+| 1 | 1 |
+| 2 | 2 |
+| 3 | 3 |
+| 4 | 4 |
+| 5 | 5 |
+| 6 | 6 |
+| 7 | 7 |
+| 8 | 8 |
+| 9 | 9 |
+
+---
+
+## Training Configuration
+
+Typical training setup includes:
+
+- Optimizer: Adam or SGD
+- Loss Function: CrossEntropyLoss
+- Batch Size: 60
+- Number of Classes: 10
+
+Example:
+
+```python
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters())
+```
+
+---
+
+## Generated Outputs
+
+### Dataset Outputs
+
+- Downloaded MNIST Dataset
+- Processed Tensor Images
+- Training DataLoader
+- Testing DataLoader
+
+### Model Outputs
+
+- Class Probabilities
+- Predicted Digits
+- Training Loss
+- Classification Accuracy
+
+### Visualization Outputs
+
+- Sample Digit Images
+- Batched Dataset Previews
+- Prediction Examples
+
+---
+
+## Future Improvements
+
+### Model Improvements
+
+- Add additional convolutional layers
+- Introduce Dropout regularization
+- Add Batch Normalization
+- Experiment with deeper architectures
+
+### Evaluation Improvements
+
+- Accuracy Score
+- Precision
+- Recall
+- F1-Score
+- Confusion Matrix
+- Classification Report
+
+### Computer Vision Improvements
+
+- Data Augmentation
+- Random Rotations
+- Random Shifts
+- Noise Injection
+
+### Deep Learning Improvements
+
+- LeNet-5
+- ResNet Variants
+- Vision Transformers (ViTs)
+- Transfer Learning Experiments
+
+---
+
+## Learning Outcomes
+
+This project provides practical experience with:
+
+- PyTorch Fundamentals
+- Convolutional Neural Networks
+- Handwritten Digit Recognition
+- TorchVision Datasets
+- DataLoader Workflows
+- Neural Network Training
+- Image Classification
+- Deep Learning Fundamentals
+- Performance Evaluation
+- Computer Vision Applications
+
+---
+
+## License
+
+This project is intended for educational and learning purposes.
